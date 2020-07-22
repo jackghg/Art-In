@@ -1,0 +1,179 @@
+#!/bin/bash
+clear
+printf "\n ARTIN INSTALLER - part 1\nYou can press ctrl+c anytime before the installation start.\nBackup your data before the installation ! Wrong settings could lead to data loss !\nPress any key to continue..."
+read
+dhcpcd
+sleep 3s
+ai0a=1; ai0b=1; ai0c=1; ai0d=1; ai0e=1; ai0f=1; ai0g=1;
+aiFC=0
+(printf " --- KEYBOARD LANGUAGE ---\n Available keyboard layouts:"); ls /usr/share/kbd/keymaps/**/*.map.gz | more -d
+read -p 'Keyboard language layout [en]: ' aiKEYLANG
+aiKEYLANG=${aiKEYLANG:-en}
+clear
+echo ' --- PARTITIONS ---'
+read -p 'Do you want to launch cfdisk to modify partitions ? [n]: ' aiCF
+aiCF=${aiCF:-n}
+if [ "$aiCF" = "y" ]; then
+cfdisk
+fi
+clear
+echo ' --- PARTITIONS ---'
+fdisk -l
+echo ''
+read -p 'The device where to install the bootloader [sda]: ' aiDISK
+aiDISK=${aiDISK:-sda}
+read -p 'The boot partition [sda1]: ' aiBOOTP
+aiBOOTP=${aiBOOTP:-sda1}
+read -p 'The boot partition as number [1]: ' aiBOOTN
+aiBOOTN=${aiBOOTN:-1}
+read -p 'The Boot is UEFI ? [y]: ' aiUEFI
+aiUEFI=${aiUEFI:-y}
+read -p "The swap partition, empty if don't want: " -e -i "sda2" aiSWAPP
+aiMAIND="sda3"
+aiUSESWAP=1
+if [ -z "$aiSWAPP" ]; then
+aiUSESWAP=0
+aiMAIND="sda2"
+fi
+read -p "The system partition, [$aiMAIND]: " aiMAINP
+aiMAINP=${aiMAINP:-$aiMAIND}
+clear
+echo ' --- USERS ---'
+read -p 'The root password: ' aiROOTP
+read -p 'The first user username [jack]: ' aiUSER
+aiUSER=${aiUSER:-jack}
+read -p "$aiUSER password: " aiUSERP
+read -p "Do you want $aiUSER to auto login ? [0]: " aiAUTOLOGIN
+aiAUTOLOGIN=${aiAUTOLOGIN:-0}
+read -p 'Your device network name [PC]: ' aiPCNAME
+aiPCNAME=${aiPCNAME:-PC}
+clear
+(printf "\n --- LOCALIZATION ---\n The system locale(lang/country). Available:"; cat /etc/locale.gen ) | more -d
+read -p 'System locale [en_US]: ' aiLOC
+aiLOC=${aiLOC:-en_US}
+aiLOCALE="${aiLOC}.UTF-8 UTF-8"
+aiLOCALEL="LANG=${aiLOC}.UTF-8"
+clear
+read -p 'How to set the Timezone ? Region/City(1) or GMT offset(0) (no daylight saving time) ? [1]: ' aiGOT
+aiGOT=${aiGOT:-1}
+if [ $aiGOT -eq 1 ]; then
+clear
+(echo ' REGIONS:'; ls /usr/share/zoneinfo) | more -d
+read -p 'Timezone region [Europe]: ' aiREGION
+aiREGION=${aiREGION:-Europe}
+clear
+( echo ' CITIES:'; ls /usr/share/zoneinfo/$aiREGION ) | more -d
+read -p 'Timezone city [London]: ' aiCITY
+aiCITY=${aiCITY:-London}
+else
+read -p 'Timezone offset [+1]: ' aiGMT
+aiGMT=${aiGMT:-+1}
+fi
+clear
+read -p 'Do you want the LTS Linux kernel(older but more stable)? [y]: ' aiLTS
+aiLTS=${aiLTS:-y}
+clear
+printf ' --- VIDEO DRIVERS ---\n 0: No video drivers\n 1: Intel official open source drivers\n 2: AMD official open source drivers for new cards\n 3: AMD open source drivers\n 4: Nvidia official proprietary drivers\n 5: Nvidia open source drivers\nVideo card drivers (0 to 5) [0]: '
+read aiVDRIVERS
+aiVDRIVERS=${aiVDRIVERS:-0}
+clear
+printf ' --- DESKTOP ENVIRONMENT ---\n 0: No desktop environment\n 1: XFCE\n 2: LXDE\nDesktop environment (0 to 2) [1]: '
+read aiDE
+aiDE=${aiDE:-1}
+clear
+printf 'Samba LAN sharing services.\nSamba will be configured (guest access).\nAuto-start the local network files and printers sharing service ? [y]: '
+read aiSHARES
+aiSHARES=${aiSHARES:-y}
+read -p 'Install printer tools ? [y]: ' aiPRINT
+aiPRINT=${aiPRINT:-y}
+read -p 'Install Bluetooth tools ? [y]: ' aiBT
+aiBT=${aiBT:-y}
+read -p 'Libre Office language pack short locale(empty to not install): ' aiLOL
+clear
+printf ' --- AUTO UPDATE ---\nThis is a simple terminal based auto-update that runs weekly.\n 0: none\n 1: visible, asks for password\n 2: invisible, will enable cronie(untested)\nThe visible one will run /opt/aiupdate at desktop startup. The invisible one will be set in /etc/anacrontab.\nAuto update [1]: '
+read aiUPDATE
+aiUPDATE=${aiUPDATE:-1}
+aiPATH="/ai"
+if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
+aiPATH="`dirname \"$0\"`"
+aiPATH="`( cd \"$aiPATH\" && pwd )`"
+fi
+if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
+read -p "Insert the Archin scripts path: " aiPATH
+fi
+if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
+echo "Scripts files not found. Giving up..."
+exit 1
+fi
+clear
+printf " CONFIGURATION COMPLETE !\n ---\n"
+echo " Keyboard language: $aiKEYLANG"
+echo " Boot. device: $aiDISK , partition: $aiBOOTP , $aiBOOTN , uefi: $aiUEFI"
+echo " Swap partition: $aiSWAPP and $aiUSESWAP"
+echo " Main partition: $aiMAINP"
+echo " Device name: $aiPCNAME"
+echo " Root user password: $aiROOTP"
+echo " First user. name: $aiUSER , password: $aiUSERP"
+echo " First user auto-login: $aiAUTOLOGIN"
+echo " Locale: $aiLOC"
+if [ $aiGOT -eq 1 ]; then
+echo " Timezone: region: $aiREGION city: $aiCITY"
+else
+echo " Timezone offset: $aiGMT"
+fi
+echo " LTS Kernel: $aiLTS"
+echo " Video Drivers: $aiVDRIVERS , Desktop: $aiDE"
+echo " Lan sharing auto-start: $aiSHARES"
+echo " Print tools: $aiPRINT"
+echo " Bluetooth tools: $aiBT"
+echo " Libre Office language pack: $aiLOL"
+echo " Auto update: $aiUPDATE"
+echo " Scripts path: $aiPATH"
+echo " ---"
+read -p " Start installation ? (y/n): " ireply
+if [ "$ireply" != "y" ]; then
+exit
+fi
+aiFC=1
+# --- Initial Settings ---
+# - Boot flag
+if [ $aiUEFI = "y" ]; then
+parted /dev/$aiDISK set $aiBOOTN esp on
+else
+parted /dev/$aiDISK set $aiBOOTN bios_grub on
+fi
+# - Format
+echo 'y' | mkfs.ext4 /dev/$aiMAINP
+if [ $aiUSESWAP -eq 1 ]; then
+mkswap /dev/$aiSWAPP
+swapon /dev/$aiSWAPP
+fi
+mkfs.fat -F 32 /dev/$aiBOOTP
+# - Mount
+mount /dev/$aiMAINP /mnt
+# --- Files Copy ---
+if [ $aiLTS = 'y' ]; then
+basestrap /mnt base linux-lts linux-lts-headers linux-firmware base-devel runit elogind elogind-runit grub efibootmgr os-prober pacman-contrib dhcpcd nano vi
+else
+basestrap /mnt base linux linux-headers linux-firmware base-devel runit elogind elogind-runit grub efibootmgr os-prober pacman-contrib dhcpcd nano vi
+fi
+fstabgen -U /mnt >> /mnt/etc/fstab
+# --- Chroot ---
+cp -f ${aiPATH}/aischr /mnt/root
+cp -f ${aiPATH}/aisc2 /mnt/root
+echo '#!/bin/bash' > /mnt/root/ivars
+( set | tail -33 ) >> /mnt/root/ivars
+if [ ! -f /mnt/root/aischr ] || [ ! -f /mnt/root/aisc2 ] || [ ! -f /mnt/root/ivars ]; then
+echo "Scripts copy error"
+exit 1
+fi
+artools-chroot /mnt ./root/aischr
+if [ $? -eq 3 ]; then
+exit 1
+fi
+printf "\n\nPart 1 complete !\nRemove the Artix iso, restart, login as root, connect and execute the second part.\n"
+read -p "Reboot ? (y/n) " ireply
+if [ "$ireply" = "y" ]; then
+reboot
+fi
+exit 0

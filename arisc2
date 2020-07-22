@@ -1,0 +1,219 @@
+#!/bin/bash
+clear
+aiAE=0
+aiERRORS="ERRORS:\n"
+echo "ARTIN INSTALLER - second part"
+read -p "Press ctrl+c to quit or enter to continue..."
+source /root/ivars
+if [ $aiFC -ne 1 ]; then
+echo "Install vars file not found or vars error !";
+exit 1
+fi
+dhcpcd
+sleep 5s
+echo 'Testing connection...'
+curl -Is http://www.google.com
+if [ $? -gt 0 ]; then
+read -p "No internet connection detected! Continue ? (y/n): " ireply
+if [ "$ireply" != "y" ]; then
+exit
+fi
+else
+echo 'Internet is OK'
+fi
+pacman -Syy
+# - Users
+groupadd sudo
+groupadd -r autologin
+useradd -m $aiUSER
+printf "$aiUSERP\n$aiUSERP" | passwd $aiUSER
+usermod -aG sudo,video,audio,input,power,storage,optical,lp,scanner,dbus,uucp $aiUSER
+printf "\nDefaults targetpw\n%%sudo ALL=(ALL) ALL\n" >> /etc/sudoers
+#
+# --- Network ---
+pacman -S networkmanager networkmanager-runit network-manager-applet samba samba-runit net-tools gufw wpa_supplicant wpa_supplicant-runit --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Network manager installation error"; fi
+ln -s /etc/runit/sv/NetworkManager /run/runit/service
+# - Local Network Share
+cat << EOT > /etc/samba/smb.conf
+[global]
+workgroup = WORKGROUP
+server string = 
+log file = /var/log/samba/smb.log
+log level = 0
+max log size = 300
+map to guest = Bad User
+[printers]
+comment = 
+path = /usr/spool/samba
+guest ok = yes
+printable = yes
+browseable = yes
+writable = no
+
+EOT
+if [ $aiSHARES = "y" ]; then
+ln -s /etc/runit/sv/smbd /run/runit/service
+ln -s /etc/runit/sv/nmbd /run/runit/service
+fi
+printf "$aiROOTP\n$aiROOTP" | smbpasswd -a nobody
+# - Sync time
+pacman -S ntp ntp-runit --noconfirm
+ntpdate pool.ntp.org
+hwclock --systohc
+# --- UI ---
+# Video Drivers
+aiTE=0
+case "$aiVDRIVERS" in
+1)
+pacman -S xf86-video-intel vulkan-intel --noconfirm
+aiTE=$?
+;;
+2)
+pacman -S xf86-video-amdgpu vulkan-radeon --noconfirm
+aiTE=$?
+;;
+3)
+pacman -S xf86-video-ati vulkan-radeon --noconfirm
+aiTE=$?
+;;
+4)
+pacman -S nvidia-dkms nvidia-settings --noconfirm
+aiTE=$?
+;;
+5)	
+pacman -S mesa xf86-video-nouveau --noconfirm
+aiTE=$?
+;;
+esac
+if [ $aiTE -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Video drivers installation error\n"; fi
+if [ $aiDE -gt 0 ]; then
+pacman -S xorg --ignore xorg-server-xdmx --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - X installation error\n"; fi
+aiTE=0
+case "$aiDE" in
+1)
+pacman -S xfce4 xfce4-goodies --noconfirm
+aiTE=$?
+pacman -R xfce4-clipman-plugin --noconfirm
+;;
+2)
+pacman -S lxde obconf slim xfce4-power-manager --noconfirm
+aiTE=$?
+pacman -R lxdm --noconfirm
+;;
+esac
+if [ $aiTE -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Desktop environment installation error\n"; fi
+pacman -S gvfs-smb ntfs-3g gnome-icon-theme --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Window manager extras installation error\n"; fi
+pacman -S lightdm lightdm-runit lightdm-gtk-greeter --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Login manager installation error\n"; fi
+sed -i 's/#greeter-session=example-gtk-gnome/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf
+ln -s /etc/runit/sv/lightdm /run/runit/service
+if [ $aiKEYLANG != "en" ]; then
+printf "Section \"InputClass\"\n    Identifier \"keyboard0\"\n    MatchIsKeyboard \"on\"\n    Option \"XkbLayout\" \"it\"\nEndSection\n" > /etc/X11/xorg.conf.d/00-keyboard.conf
+fi
+# Autologin
+if [ $aiAUTOLOGIN -eq 1 ]; then
+gpasswd -a $aiUSER autologin
+sed -i "s/#autologin-user=/autologin-user=${aiUSER}/" /etc/lightdm/lightdm.conf
+fi
+fi
+# Audio
+pacman -S alsa-utils alsa-utils-runit pulseaudio-alsa paprefs pavucontrol --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Audio manager installation error\n"; fi
+# Printer
+if [ $aiPRINT = "y" ]; then
+pacman -S cups cups-runit cups-pdf system-config-printer --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Printing manager installation error\n"; fi
+ln -s /etc/runit/sv/cupsd /run/runit/service
+fi
+# Bluetooth
+if [ $aiBT = "y" ]; then
+pacman -S bluez bluez-runit bluez-utils --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Bluetooth installation error\n"; fi
+ln -s /etc/runit/sv/bluetoothd /run/runit/service
+fi
+# --- Software ---
+pacman -S gnu-free-fonts font-bh-ttf ttf-liberation ttf-dejavu ttf-ubuntu-font-family ttf-linux-libertine ttf-opensans ttf-hannom ttf-hanazono ttf-baekmuk --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Fonts installation error\n"; fi
+pacman -S gtk2-perl gnome-packagekit git wget grub-customizer rxvt-unicode xf86-input-libinput cronie cronie-runit sshfs openssh openssh-runit p7zip xarchiver --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some system software installation error\n"; fi
+#ln -s /etc/runit/sv/sshd /run/runit/service
+#ln -s /etc/runit/sv/cronie /run/runit/service
+if [ $aiDE -gt 0 ]; then
+pacman -S htop hardinfo onboard catfish alacarte gnome-calculator gparted libreoffice-still vlc gimp firefox evince notepadqq geany claws-mail hexchat utox xboard gnuchess aisleriot --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some software installation error\n"; fi
+pacman -S archlinux-wallpaper adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme moka-icon-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Themes installation error\n"; fi
+fi
+cat << EOT > /home/${aiUSER}/.Xresources
+*.foreground: #fafdfb
+*.background: #2e3235
+*.cursorColor: #fafdfb
+*.color0: #282a2e
+*.color8: #373b41
+*.color1: #a54242
+*.color9: #cc6666
+*.color2: #8c9440
+*.color10: #b5bd68
+*.color3: #de935f
+*.color11: #f0c674
+*.color4: #5f819d
+*.color12: #81a2be
+*.color5: #85678f
+*.color13: #b294bb
+*.color6: #5e8d87
+*.color14: #8abeb7
+*.color7: #707880
+*.color15: #fafdfb
+URxvt*font: xft:inconsolata:size=13:antialias=true
+EOT
+if [ -n $aiLOL ]; then
+pacman -S libreoffice-still-$aiLOL --noconfirm
+if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Libre Office language pack installation error\n"; fi
+fi
+pacman -R gst-plugins-bad --noconfirm
+# - Autoupdate
+case "$aiUPDATE" in
+1)
+"2020-07-23" > /var/upd
+chgrp sudo /var/upd
+chmod 774 /var/upd
+cat << EOT > /opt/aiupdate
+#!/bin/bash
+od=$(date +%s --date $(cat /var/upd))
+nd=$(date +%s)
+if [ $((($nd-$od)/86400)) -gt 6 ]; then
+date +%F > /var/upd
+urxvt -e bash -c "echo 'AI Auto Update'; read -p 'Press Enter to continue...'; echo 'Updating time...'; sudo ntpdate pool.ntp.org; sudo hwclock -w; sudo pacman -Syyu --noconfirm && sudo paccache -rk1; read -p 'Press Enter to quit.'"
+fi
+EOT
+chmod +x /opt/aiupdate
+case "$aiDE" in
+1)
+echo "/opt/aiupdate" >> /etc/xdg/autostart/autostart
+echo "/opt/aiupdate" >> /home/${aiUSER}/.config/autostart/autostart
+;;
+2)
+echo "/opt/aiupdate" >> /etc/xdg/lxsession/LXDE/autostart
+echo "/opt/aiupdate" >> /home/${aiUSER}/.config/lxsession/LXDE/autostart
+;;
+esac
+;;
+2)
+ln -s /etc/runit/sv/cronie /run/runit/service
+echo "7	0	ai	ntpdate pool.ntp.org; hwclock -w; pacman -Syyu --noconfirm && paccache -rk1" >> /etc/anacrontab/
+;;
+esac
+# - Restart
+printf "\n\n --- INSTALLATION COMPLETE ---\nRemember to review and delete installation files in /root\nThe file ivars contains the installation settings and the passwords!\nThe file install-errors may contains errors\n"
+if [ $aiAE -eq 1 ]; then
+echo "ERRORS:"
+echo -e $aiERRORS
+fi
+read -p "Reboot ? (y/n): " ireply
+if [ "$ireply" = "y" ]; then
+reboot
+fi
+exit 0

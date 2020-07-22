@@ -1,0 +1,35 @@
+#!/bin/bash
+# - Timezone
+source /root/ivars
+if [ $aiFC -ne 1 ]; then
+echo "Vars file not found !";
+exit 3
+fi
+if [ $aiGOT -eq 1 ]; then
+ln -sf /usr/share/zoneinfo/${aiREGION}/${aiCITY} /etc/localtime
+else
+ln -sf /usr/share/zoneinfo/Etc/GMT${aiGMT} /etc/localtime
+fi
+echo $aiLOCALE >> /etc/locale.gen
+locale-gen
+echo $aiLOCALEL > /etc/locale.conf
+# - Keyboard
+if [ $aiKEYLANG != "en" ]; then
+echo "KEYMAP=$aiKEYLANG" > /etc/vconsole.conf
+fi
+# - Nework conf
+echo $aiPCNAME > /etc/hostname
+printf "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 ${aiPCNAME}.localdomain	${aiPCNAME}\n" > /etc/hosts
+# - Root password
+printf "$aiROOTP\n$aiROOTP" | passwd
+# - Boot
+if [ $aiUEFI = "y" ]; then
+mkdir /boot/efi
+mount /dev/$aiBOOTP /boot/efi
+mkdir /boot/efi/EFI
+grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB
+else
+grub-install --target=i386-pc /dev/$aiDISK
+fi
+grub-mkconfig -o /boot/grub/grub.cfg
+exit
