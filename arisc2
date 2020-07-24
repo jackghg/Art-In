@@ -60,7 +60,7 @@ printf "$aiROOTP\n$aiROOTP" | smbpasswd -a nobody
 # - Sync time
 pacman -S ntp ntp-runit --noconfirm
 ntpdate pool.ntp.org
-hwclock --systohc
+hwclock -w
 # --- UI ---
 # Video Drivers
 aiTE=0
@@ -174,10 +174,23 @@ pacman -S libreoffice-still-$aiLOL --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Libre Office language pack installation error\n"; fi
 fi
 pacman -R gst-plugins-bad --noconfirm
+# Time Update
+#ln -s /etc/runit/sv/ntpd /run/runit/service
+echo "/opt/aitime &" >> /etc/rc.local
+chmod 744 /etc/rc.local
+cat << EOT > /opt/aitime
+#!/bin/sh
+sleep 120
+d=$(( RANDOM % 540 ))
+sleep $d
+ntpdate pool.ntp.org
+hwclock -w
+EOT
+chmod 744 /opt/aitime
 # - Autoupdate
 case "$aiUPDATE" in
 1)
-"2020-07-23" > /var/upd
+echo "2020-07-23" > /var/upd
 chgrp sudo /var/upd
 chmod 774 /var/upd
 cat << EOT > /opt/aiupdate
@@ -186,10 +199,10 @@ od=$(date +%s --date $(cat /var/upd))
 nd=$(date +%s)
 if [ $((($nd-$od)/86400)) -gt 6 ]; then
 date +%F > /var/upd
-urxvt -e bash -c "echo 'AI Auto Update'; read -p 'Press Enter to continue...'; echo 'Updating time...'; sudo ntpdate pool.ntp.org; sudo hwclock -w; sudo pacman -Syyu --noconfirm && sudo paccache -rk1; read -p 'Press Enter to quit.'"
+urxvt -e bash -c "echo 'AI Auto Update'; read -p 'Press Enter to continue...'; sudo pacman -Syyu --noconfirm && sudo paccache -rk1; read -p 'Press Enter to quit.'"
 fi
 EOT
-chmod +x /opt/aiupdate
+chmod 744 /opt/aiupdate
 case "$aiDE" in
 1)
 echo "/opt/aiupdate" >> /etc/xdg/autostart/autostart
