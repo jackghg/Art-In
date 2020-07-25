@@ -32,6 +32,7 @@ A very basic auto update will execute `pacman -Syyu && paccache -rk1` every 7 da
 A script will update the clock some minute after the boot. If your PC stays on for days, you could use ntpd or a cron job instead.
 
 ## Warnings and limitations
+- Backup your data before installing Linux !
 - Xfce or Lxde (only) can be installed at the moment. 
-- the installer won't connect to wifi. Do it manually
+- the installer won't connect to **wifi**. Do it manually.
 - home partition and extra partitions won't be mounted. Edit the fstab later.
