@@ -1,11 +1,13 @@
 #!/bin/bash
 clear
-printf "\n ARTIN INSTALLER - part 1\nYou can press ctrl+c anytime before the installation start.\nBackup your data before the installation ! Wrong settings could lead to data loss !\nPress any key to continue..."
+printf "\n ART-IN INSTALLER - part 1\nYou can press ctrl+c anytime before the installation start.\nBackup your data before the installation ! Wrong settings could lead to data loss !\nPress enter to continue..."
 read
 dhcpcd
 sleep 3s
-ai0a=1; ai0b=1; ai0c=1; ai0d=1; ai0e=1; ai0f=1; ai0g=1;
+ai0a=1; ai0b=1; ai0c=1; ai0d=1; ai0e=1; ai0f=1; ai0g=1; #long story,its related to the set command at the end
 aiFC=0
+aiROOTP=""
+aiUSERP=""
 (printf " --- KEYBOARD LANGUAGE ---\n Available keyboard layouts:"); ls /usr/share/kbd/keymaps/**/*.map.gz | more -d
 read -p 'Keyboard language layout [en]: ' aiKEYLANG
 aiKEYLANG=${aiKEYLANG:-en}
@@ -94,14 +96,14 @@ printf ' --- AUTO UPDATE ---\nThis is a simple terminal based auto-update that r
 read aiUPDATE
 aiUPDATE=${aiUPDATE:-1}
 aiPATH="/ai"
-if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
+if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
 aiPATH="`dirname \"$0\"`"
 aiPATH="`( cd \"$aiPATH\" && pwd )`"
 fi
-if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
-read -p "Insert the Archin scripts path: " aiPATH
+if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
+read -p "Insert the Art-in scripts path: " aiPATH
 fi
-if [ ! -f ${aiPATH}/aischr ] || [ ! -f ${aiPATH}/aisc2 ]; then
+if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
 echo "Scripts files not found. Giving up..."
 exit 1
 fi
@@ -159,15 +161,15 @@ basestrap /mnt base linux linux-headers linux-firmware base-devel runit elogind 
 fi
 fstabgen -U /mnt >> /mnt/etc/fstab
 # --- Chroot ---
-cp -f ${aiPATH}/aischr /mnt/root
-cp -f ${aiPATH}/aisc2 /mnt/root
+cp -f ${aiPATH}/arischr /mnt/root
+cp -f ${aiPATH}/arisc2 /mnt/root
 echo '#!/bin/bash' > /mnt/root/ivars
 ( set | tail -33 ) >> /mnt/root/ivars
-if [ ! -f /mnt/root/aischr ] || [ ! -f /mnt/root/aisc2 ] || [ ! -f /mnt/root/ivars ]; then
+if [ ! -f /mnt/root/arischr ] || [ ! -f /mnt/root/arisc2 ] || [ ! -f /mnt/root/ivars ]; then
 echo "Scripts copy error"
 exit 1
 fi
-artools-chroot /mnt ./root/aischr
+artools-chroot /mnt ./root/arischr
 if [ $? -eq 3 ]; then
 exit 1
 fi

@@ -2,7 +2,7 @@
 clear
 aiAE=0
 aiERRORS="ERRORS:\n"
-echo "ARTIN INSTALLER - second part"
+echo "ART-IN INSTALLER - second part"
 read -p "Press ctrl+c to quit or enter to continue..."
 source /root/ivars
 if [ $aiFC -ne 1 ]; then
@@ -12,6 +12,7 @@ fi
 dhcpcd
 sleep 5s
 echo 'Testing connection...'
+sleep 1s
 curl -Is http://www.google.com
 if [ $? -gt 0 ]; then
 read -p "No internet connection detected! Continue ? (y/n): " ireply
@@ -26,7 +27,11 @@ pacman -Syy
 groupadd sudo
 groupadd -r autologin
 useradd -m $aiUSER
+if [ $aiUSERP ]; then
 printf "$aiUSERP\n$aiUSERP" | passwd $aiUSER
+else
+passwd -d $aiUSER
+fi
 usermod -aG sudo,video,audio,input,power,storage,optical,lp,scanner,dbus,uucp $aiUSER
 printf "\nDefaults targetpw\n%%sudo ALL=(ALL) ALL\n" >> /etc/sudoers
 #
@@ -35,7 +40,7 @@ pacman -S networkmanager networkmanager-runit network-manager-applet samba samba
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Network manager installation error"; fi
 ln -s /etc/runit/sv/NetworkManager /run/runit/service
 # - Local Network Share
-cat << EOT > /etc/samba/smb.conf
+cat << 'EOT' > /etc/samba/smb.conf
 [global]
 workgroup = WORKGROUP
 server string = 
@@ -110,6 +115,7 @@ pacman -S lightdm lightdm-runit lightdm-gtk-greeter --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Login manager installation error\n"; fi
 sed -i 's/#greeter-session=example-gtk-gnome/greeter-session=lightdm-gtk-greeter/' /etc/lightdm/lightdm.conf
 ln -s /etc/runit/sv/lightdm /run/runit/service
+sv stop lightdm
 if [ $aiKEYLANG != "en" ]; then
 printf "Section \"InputClass\"\n    Identifier \"keyboard0\"\n    MatchIsKeyboard \"on\"\n    Option \"XkbLayout\" \"it\"\nEndSection\n" > /etc/X11/xorg.conf.d/00-keyboard.conf
 fi
@@ -147,7 +153,7 @@ if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some software installation e
 pacman -S archlinux-wallpaper adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme moka-icon-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Themes installation error\n"; fi
 fi
-cat << EOT > /home/${aiUSER}/.Xresources
+cat << 'EOT' > /etc/skel/.Xresources
 *.foreground: #fafdfb
 *.background: #2e3235
 *.cursorColor: #fafdfb
@@ -169,7 +175,7 @@ cat << EOT > /home/${aiUSER}/.Xresources
 *.color15: #fafdfb
 URxvt*font: xft:inconsolata:size=13:antialias=true
 EOT
-if [ -n $aiLOL ]; then
+if [ $aiLOL ]; then
 pacman -S libreoffice-still-$aiLOL --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Libre Office language pack installation error\n"; fi
 fi
@@ -178,12 +184,13 @@ pacman -R gst-plugins-bad --noconfirm
 #ln -s /etc/runit/sv/ntpd /run/runit/service
 echo "/opt/aitime &" >> /etc/rc.local
 chmod 744 /etc/rc.local
-cat << EOT > /opt/aitime
+cat << 'EOT' > /opt/aitime
 #!/bin/sh
 sleep 120
 d=$(( RANDOM % 540 ))
 sleep $d
 ntpdate pool.ntp.org
+sleep 1s
 hwclock -w
 EOT
 chmod 744 /opt/aitime
@@ -193,7 +200,7 @@ case "$aiUPDATE" in
 echo "2020-07-23" > /var/upd
 chgrp sudo /var/upd
 chmod 774 /var/upd
-cat << EOT > /opt/aiupdate
+cat << 'EOT' > /opt/aiupdate
 #!/bin/bash
 od=$(date +%s --date $(cat /var/upd))
 nd=$(date +%s)
@@ -203,26 +210,24 @@ urxvt -e bash -c "echo 'AI Auto Update'; read -p 'Press Enter to continue...'; s
 fi
 EOT
 chmod 744 /opt/aiupdate
-case "$aiDE" in
-1)
+if [ $aiDE -gt 0 ]; then
+#this should be standard
 echo "/opt/aiupdate" >> /etc/xdg/autostart/autostart
-echo "/opt/aiupdate" >> /home/${aiUSER}/.config/autostart/autostart
-;;
-2)
+mkdir -p /etc/skel/.config/autostart
+echo "/opt/aiupdate" >> /etc/skel/.config/autostart/autostart
+if [ $aiDE -eq 2 ]; then
 echo "/opt/aiupdate" >> /etc/xdg/lxsession/LXDE/autostart
-echo "/opt/aiupdate" >> /home/${aiUSER}/.config/lxsession/LXDE/autostart
-;;
-esac
+fi
+fi
 ;;
 2)
 ln -s /etc/runit/sv/cronie /run/runit/service
 echo "7	0	ai	ntpdate pool.ntp.org; hwclock -w; pacman -Syyu --noconfirm && paccache -rk1" >> /etc/anacrontab/
 ;;
 esac
-# - Restart
+# Restart
 printf "\n\n --- INSTALLATION COMPLETE ---\nRemember to review and delete installation files in /root\nThe file ivars contains the installation settings and the passwords!\nThe file install-errors may contains errors\n"
 if [ $aiAE -eq 1 ]; then
-echo "ERRORS:"
 echo -e $aiERRORS
 fi
 read -p "Reboot ? (y/n): " ireply

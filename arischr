@@ -21,7 +21,11 @@ fi
 echo $aiPCNAME > /etc/hostname
 printf "127.0.0.1 localhost\n::1 localhost\n127.0.1.1 ${aiPCNAME}.localdomain	${aiPCNAME}\n" > /etc/hosts
 # - Root password
+if [ $aiROOTP ]; then
 printf "$aiROOTP\n$aiROOTP" | passwd
+else
+passwd -d root
+fi
 # - Boot
 if [ $aiUEFI = "y" ]; then
 mkdir /boot/efi
