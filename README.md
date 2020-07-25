@@ -34,5 +34,5 @@ A script will update the clock some minute after the boot. If your PC stays on f
 ## Warnings and limitations
 - Backup your data before installing Linux !
 - Xfce or Lxde (only) can be installed at the moment. 
-- the installer won't connect to **wifi**. Do it manually.
+- the installer won't connect to **wifi**. Do it manually. Internet is needed at part 2
 - home partition and extra partitions won't be mounted. Edit the fstab later.
