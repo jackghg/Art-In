@@ -28,7 +28,7 @@ cd /ai
 ## Autoupdate
 A very basic auto update will execute `pacman -Syyu && paccache -rk1` every 7 days if you install it. If the update fails, see  the arch linux news, a manual fix may be needed.\
 You can tweak the script at: `/opt/aiupdate`\
-Autostarted at: `/etc/xdg/autostart/autostart`, `home/.config/autostart/autostart` or `/etc/xdg/lxsession/LXDE/autostart`, `home/.config/lxsession/LXDE/autostart`\
+Autostarted at: `/etc/xdg/autostart/autostart`, `home/.config/autostart/autostart`or`/etc/xdg/lxsession/LXDE/autostart`, `home/.config/lxsession/LXDE/autostart`\
 The invisible update is a cronie anacron task at `/etc/anacrontab`
 
 ## Time Update
