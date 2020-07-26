@@ -26,10 +26,16 @@ cd /ai
 - Restart. Review and delete the installer files in /root
 
 ## Autoupdate
-A very basic auto update will execute `pacman -Syyu && paccache -rk1` every 7 days if you install it. If the update fails, see  the arch linux news, a manual fix may be needed.
+A very basic auto update will execute `pacman -Syyu && paccache -rk1` every 7 days if you install it. If the update fails, see  the arch linux news, a manual fix may be needed.\
+You can tweak the script at: `/opt/aiupdate`\
+Autostarted at: `/etc/xdg/autostart/autostart` , `/etc/xdg/lxsession/LXDE/autostart` , `userhome/.config/autostart/autostart` , `userhome/.config/lxsession/LXDE/autostart`\
+The invisible update is a cronie anacron task at `/etc/anacrontab`
 
 ## Time Update
-A script will update the clock some minute after the boot. If your PC stays on for days, you could use ntpd or a cron job instead.
+A script will update the clock some minute after the boot. If your PC stays on for days, you could use ntpd or cron instead.\
+The script is at: `/opt/aitime`\
+Autostarted at `/etc/rc.local`
+If you dualboot windows the easyest way to fix the time is to set the hardware clock to UTC in windows(registry).
 
 ## Warnings and limitations
 - **Backup** your data before installing Linux !
