@@ -39,6 +39,7 @@ If you dualboot windows the easyest way to fix the time is to set the hardware c
 
 ## Warnings and limitations
 - **Backup** your data before installing Linux !
-- Xfce or Lxde (only) can be installed at the moment. 
+- Xfce or Lxde (only) can be installed at the moment
 - the installer won't connect to **wifi**. Do it manually. Internet is needed at part 2
-- home partition and extra partitions won't be mounted. Edit the fstab later.
+- home partition and extra partitions won't be mounted. Edit the fstab later
+- no encryption
