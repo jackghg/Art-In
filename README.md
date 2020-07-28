@@ -4,7 +4,7 @@ Art-In is a **Artix** installer scripts, to install Artix Linux with a interacti
 Art-in is still a beta.
 ## Installation:
 - Backup your data !
-- Download the last artix base iso, flash it to a usb drive and boot it
+- Download the last artix base iso, flash it to a usb drive, boot it and login as root
 - Put the 3 script files in /ai for example by mounting a drive
 ```
 mkdir /ai
