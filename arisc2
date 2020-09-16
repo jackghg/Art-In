@@ -103,7 +103,7 @@ aiTE=$?
 pacman -R xfce4-clipman-plugin --noconfirm
 ;;
 2)
-pacman -S lxde obconf slim xfce4-power-manager --noconfirm
+pacman -S lxde obconf slock xfce4-power-manager --noconfirm
 aiTE=$?
 pacman -R lxdm --noconfirm
 ;;
@@ -143,14 +143,14 @@ fi
 # --- Software ---
 pacman -S gnu-free-fonts font-bh-ttf ttf-liberation ttf-dejavu ttf-ubuntu-font-family ttf-linux-libertine ttf-opensans ttf-hannom ttf-hanazono ttf-baekmuk --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Fonts installation error\n"; fi
-pacman -S gtk2-perl gnome-packagekit git wget grub-customizer rxvt-unicode xf86-input-libinput cronie cronie-runit sshfs openssh openssh-runit p7zip xarchiver --noconfirm
+pacman -S gtk2-perl gtk-engine-murrine lightdm-gtk-greeter-settings gnome-packagekit git wget grub-customizer rxvt-unicode xf86-input-libinput cronie cronie-runit sshfs openssh openssh-runit p7zip htop --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some system software installation error\n"; fi
 #ln -s /etc/runit/sv/sshd /run/runit/service
 #ln -s /etc/runit/sv/cronie /run/runit/service
 if [ $aiDE -gt 0 ]; then
-pacman -S htop hardinfo onboard catfish alacarte gnome-calculator gparted libreoffice-still vlc gimp firefox evince notepadqq geany claws-mail hexchat utox xboard gnuchess aisleriot --noconfirm
+pacman -S xarchiver hardinfo onboard catfish alacarte gnome-calculator gparted libreoffice-still vlc gimp firefox evince notepadqq geany claws-mail hexchat utox xboard gnuchess aisleriot --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some software installation error\n"; fi
-pacman -S archlinux-wallpaper adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme moka-icon-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
+pacman -S archlinux-wallpaper artix-dark-theme xcursor-breeze adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme moka-icon-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Themes installation error\n"; fi
 fi
 cat << 'EOT' > /etc/skel/.Xresources
