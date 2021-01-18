@@ -95,18 +95,6 @@ clear
 printf ' --- AUTO UPDATE ---\nThis is a simple terminal based auto-update that runs weekly.\n 0: none\n 1: visible, asks for password\n 2: invisible, will enable cronie(untested)\nThe visible one will run /opt/aiupdate at desktop startup. The invisible one will be set in /etc/anacrontab.\nAuto update [1]: '
 read aiUPDATE
 aiUPDATE=${aiUPDATE:-1}
-aiPATH="/ai"
-if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
-aiPATH="`dirname \"$0\"`"
-aiPATH="`( cd \"$aiPATH\" && pwd )`"
-fi
-if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
-read -p "Insert the Art-in scripts path: " aiPATH
-fi
-if [ ! -f ${aiPATH}/arischr ] || [ ! -f ${aiPATH}/arisc2 ]; then
-echo "Scripts files not found. Giving up..."
-exit 1
-fi
 clear
 printf " CONFIGURATION COMPLETE !\n ---\n"
 echo " Keyboard language: $aiKEYLANG"
@@ -130,7 +118,6 @@ echo " Print tools: $aiPRINT"
 echo " Bluetooth tools: $aiBT"
 echo " Libre Office language pack: $aiLOL"
 echo " Auto update: $aiUPDATE"
-echo " Scripts path: $aiPATH"
 echo " ---"
 read -p " Start installation ? (y/n): " ireply
 if [ "$ireply" != "y" ]; then
@@ -161,15 +148,16 @@ basestrap /mnt base linux linux-headers linux-firmware base-devel runit elogind 
 fi
 fstabgen -U /mnt >> /mnt/etc/fstab
 # --- Chroot ---
-cp -f ${aiPATH}/arischr /mnt/root
-cp -f ${aiPATH}/arisc2 /mnt/root
+cp -f ./arischr /mnt/root
+cp -f ./arisc2 /mnt/root
+cp -f ./arisc1 /mnt/root
 echo '#!/bin/bash' > /mnt/root/ivars
-( set | tail -33 ) >> /mnt/root/ivars
+( set | tail -32 ) >> /mnt/root/ivars
 if [ ! -f /mnt/root/arischr ] || [ ! -f /mnt/root/arisc2 ] || [ ! -f /mnt/root/ivars ]; then
 echo "Scripts copy error"
 exit 1
 fi
-artools-chroot /mnt ./root/arischr
+artix-chroot /mnt ./root/arischr
 if [ $? -eq 3 ]; then
 exit 1
 fi

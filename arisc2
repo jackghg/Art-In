@@ -148,9 +148,9 @@ if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some system software install
 #ln -s /etc/runit/sv/sshd /run/runit/service
 #ln -s /etc/runit/sv/cronie /run/runit/service
 if [ $aiDE -gt 0 ]; then
-pacman -S xarchiver hardinfo onboard catfish alacarte gnome-calculator gparted libreoffice-still vlc gimp firefox evince notepadqq geany claws-mail hexchat utox xboard gnuchess aisleriot --noconfirm
+pacman -S xarchiver hardinfo onboard catfish alacarte gnome-calculator gparted libreoffice-still vlc gimp firefox evince notepadqq geany claws-mail hexchat utox xboard gnuchess aisleriot phototonic --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some software installation error\n"; fi
-pacman -S archlinux-wallpaper artix-dark-theme xcursor-breeze adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme moka-icon-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
+pacman -S archlinux-wallpaper artix-dark-theme adapta-gtk-theme arc-gtk-theme arc-icon-theme arc-solid-gtk-theme papirus-icon-theme breeze-gtk breeze-icons materia-gtk-theme deepin-gtk-theme deepin-icon-theme elementary-icon-theme lxde-icon-theme --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Themes installation error\n"; fi
 fi
 cat << 'EOT' > /etc/skel/.Xresources
@@ -179,7 +179,7 @@ if [ $aiLOL ]; then
 pacman -S libreoffice-still-$aiLOL --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Libre Office language pack installation error\n"; fi
 fi
-pacman -R gst-plugins-bad --noconfirm
+pacman -Rd chromaprint --noconfirm
 # Time Update
 #ln -s /etc/runit/sv/ntpd /run/runit/service
 echo "/opt/aitime &" >> /etc/rc.local
