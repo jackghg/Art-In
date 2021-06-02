@@ -96,6 +96,7 @@ if [ $aiDE -gt 0 ]; then
 pacman -S xorg --ignore xorg-server-xdmx --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - X installation error\n"; fi
 aiTE=0
+# Desktop
 case "$aiDE" in
 1)
 pacman -S xfce4 xfce4-goodies --noconfirm
@@ -103,7 +104,7 @@ aiTE=$?
 pacman -R xfce4-clipman-plugin --noconfirm
 ;;
 2)
-pacman -S lxde obconf slock xfce4-power-manager --noconfirm
+pacman -S lxde obconf slock xfce4-power-manager dunst --noconfirm
 aiTE=$?
 pacman -R lxdm --noconfirm
 ;;
@@ -143,7 +144,7 @@ fi
 # --- Software ---
 pacman -S gnu-free-fonts font-bh-ttf ttf-liberation ttf-dejavu ttf-ubuntu-font-family ttf-linux-libertine ttf-opensans ttf-hannom ttf-hanazono ttf-baekmuk --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Fonts installation error\n"; fi
-pacman -S gtk2-perl gtk-engine-murrine lightdm-gtk-greeter-settings gnome-packagekit git wget grub-customizer rxvt-unicode xf86-input-libinput cronie cronie-runit sshfs openssh openssh-runit p7zip htop --noconfirm
+pacman -S gtk2-perl gtk-engine-murrine lightdm-gtk-greeter-settings gnome-packagekit git wget grub-customizer rxvt-unicode xf86-input-libinput cronie cronie-runit sshfs openssh openssh-runit p7zip htop rsm --noconfirm
 if [ $? -gt 0 ]; then aiAE=1; aiERRORS="$aiERRORS - Some system software installation error\n"; fi
 #ln -s /etc/runit/sv/sshd /run/runit/service
 #ln -s /etc/runit/sv/cronie /run/runit/service
@@ -174,6 +175,79 @@ cat << 'EOT' > /etc/skel/.Xresources
 *.color7: #707880
 *.color15: #fafdfb
 URxvt*font: xft:inconsolata:size=13:antialias=true
+EOT
+mkdir -p /etc/skel/.config/dunst
+cat << 'EOT' > /etc/skel/.config/dunst/dunstrc
+[global]
+    monitor = 0
+    follow = mouse
+    geometry = "0x5-30+30"
+    progress_bar = true
+    progress_bar_height = 15
+    progress_bar_frame_width = 1
+    progress_bar_min_width = 150
+    progress_bar_max_width = 500
+    indicate_hidden = yes
+    shrink = yes
+    transparency = 0
+    notification_height = 0
+    separator_height = 2
+    padding = 7
+    horizontal_padding = 8
+    text_icon_padding = 10
+    frame_width = 0
+    frame_color = "#000000"
+    separator_color = frame
+    sort = no
+    idle_threshold = 0
+    font = Sans 14
+    line_height = 0
+    markup = full
+    format = "<b>%a-%s</b>\n%b"
+    alignment = left
+    vertical_alignment = center
+    show_age_threshold = -1
+    word_wrap = yes
+    ellipsize = middle
+    ignore_newline = no
+    stack_duplicates = false
+    hide_duplicate_count = false
+    show_indicators = no
+    icon_position = left
+    min_icon_size = 20
+    max_icon_size = 512
+    icon_path = /usr/share/icons/gnome/48x48/status/:/usr/share/icons/gnome/48x48/devices/
+    sticky_history = yes
+    history_length = 5
+    dmenu = /usr/bin/dmenu -p dunst:
+    browser = /usr/bin/firefox -new-tab
+    always_run_script = true
+    title = Dunst
+    class = Dunst
+    startup_notification = false
+    verbosity = crit
+    corner_radius = 5
+    ignore_dbusclose = false
+    force_xwayland = false
+    force_xinerama = false
+    mouse_left_click = close_current
+    mouse_middle_click = do_action, close_current
+    mouse_right_click = close_all
+[experimental]
+    per_monitor_dpi = false
+[shortcuts]
+[urgency_low]
+    background = "#333333"
+    foreground = "#dddddd"
+    timeout = 3
+[urgency_normal]
+    background = "#555555"
+    foreground = "#dddddd"
+    timeout = 5
+[urgency_critical]
+    background = "#555555"
+    foreground = "#e05915"
+    timeout = 0
 EOT
 if [ $aiLOL ]; then
 pacman -S libreoffice-still-$aiLOL --noconfirm
@@ -211,7 +285,6 @@ fi
 EOT
 chmod 744 /opt/aiupdate
 if [ $aiDE -gt 0 ]; then
-#this should be standard
 echo "/opt/aiupdate" >> /etc/xdg/autostart/autostart
 mkdir -p /etc/skel/.config/autostart
 echo "/opt/aiupdate" >> /etc/skel/.config/autostart/autostart

@@ -42,8 +42,9 @@ aiMAINP=${aiMAINP:-$aiMAIND}
 clear
 echo ' --- USERS ---'
 read -p 'The root password: ' aiROOTP
-read -p 'The first user username [jack]: ' aiUSER
+read -p 'The first user username(lowercase) [jack]: ' aiUSER
 aiUSER=${aiUSER:-jack}
+aiUSER=${aiUSER,,}
 read -p "$aiUSER password: " aiUSERP
 read -p "Do you want $aiUSER to auto login ? [0]: " aiAUTOLOGIN
 aiAUTOLOGIN=${aiAUTOLOGIN:-0}
