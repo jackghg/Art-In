@@ -22,6 +22,8 @@ fi
 else
 echo 'Internet is OK'
 fi
+pacman -Syyu --noconfirm
+pacman -S artix-archlinux-support --noconfirm
 pacman -Syy
 # - Users
 groupadd sudo
